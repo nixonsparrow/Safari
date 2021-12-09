@@ -1,5 +1,5 @@
 from unittest import TestCase
-from models import Safari, Lion, Plant
+from models import Safari, Lion, Zebra, Plant
 
 
 class TestAnimals(TestCase):
@@ -7,6 +7,7 @@ class TestAnimals(TestCase):
         self.safari = Safari(2, 2)
         self.lion_male = Lion(self.safari, 'male')
         self.lion_female = Lion(self.safari, 'female')
+        self.zebra = Zebra(self.safari, 'female')
         self.safari.insert(self.lion_male, (0, 0))
         self.safari.insert(self.lion_female, (1, 0))
 
@@ -31,6 +32,31 @@ class TestAnimals(TestCase):
         self.assertRaises(ValueError, self.lion_male.move, 'SD', 1)
         self.assertRaises(KeyError, self.lion_male.move, 'S', 1)
 
+    def test_possible_directions(self):
+        self.assertEqual(self.lion_male.possible_directions(), ['N', 'E', 'NE'])
+        self.assertEqual(self.lion_female.possible_directions(), ['N', 'W', 'NW'])
+
+    def test_move(self):
+        self.assertEqual(self.lion_male.safari.field(0, 0), self.lion_male)
+        self.assertNotEqual(self.lion_male.safari.field(0, 1), self.lion_male)
+        self.lion_male.move('N', 1)
+        self.assertEqual(self.lion_male.safari.field(0, 1), self.lion_male)
+        self.assertNotEqual(self.lion_male.safari.field(0, 0), self.lion_male)
+
+    def test_encounter_lion_eats_zebra(self):
+        self.assertEqual(self.safari.find_object(self.lion_male), (0, 0))
+        self.safari.insert(self.zebra, (0, 1))
+        self.safari.encounter({}, self.zebra, self.lion_male)
+        self.assertEqual(self.safari.find_object(self.lion_male), (0, 1))
+        self.assertNotEqual(self.safari.find_object(self.lion_male), (0, 0))
+
+    def test_lion_moves_and_eats_zebra(self):
+        self.assertEqual(self.safari.find_object(self.lion_male), (0, 0))
+        self.safari.insert(self.zebra, (0, 1))
+        self.lion_male.move('N', 1)
+        self.assertEqual(self.safari.find_object(self.lion_male), (0, 1))
+        self.assertNotEqual(self.safari.find_object(self.lion_male), (0, 0))
+
 
 class TestPlants(TestCase):
     def setUp(self):
@@ -47,6 +73,7 @@ class TestSafari(TestCase):
         self.safari = Safari(2, 2)
         self.lion_male = Lion(self.safari, 'male')
         self.lion_female = Lion(self.safari, 'female')
+        self.zebra = Zebra(self.safari, 'female')
 
     def test_creation(self):
         self.assertEqual(self.safari.fields, {(0, 0): [], (1, 0): [], (0, 1): [], (1, 1): []})
@@ -66,12 +93,40 @@ class TestSafari(TestCase):
         self.lion_male.move_on_field((1, 0))
         self.assertEqual(self.safari.visualise(), '----\n|  |\n| L| lion (lion)\n----')
 
+    def test_count_species(self):
+        self.assertEqual(self.safari.count_animals('lion'), 0)
+        self.assertEqual(self.safari.count_animals('zebra'), 0)
+        self.safari.insert(self.lion_male, (0, 0))
+        self.assertEqual(self.safari.count_animals('lion'), 1)
+        self.safari.insert(self.lion_female, (0, 1))
+        self.safari.insert(self.zebra, (1, 1))
+        self.assertEqual(self.safari.count_animals('lion'), 2)
+        self.assertEqual(self.safari.count_animals('zebra'), 1)
+
+    def test_get_species(self):
+        self.assertFalse(self.safari.get_species())
+        self.safari.insert(self.lion_male, (0, 0))
+        self.assertEqual(self.safari.get_species(), {'lion'})
+        self.safari.insert(self.zebra, (1, 1))
+        self.assertEqual(self.safari.get_species(), {'zebra', 'lion'})
+
+    def test_find_free_side_edge_slot(self):
+        self.assertEqual(self.safari.find_free_side_edge_slot(), (0, 0))
+        self.safari.insert(self.zebra, (0, 0))
+        self.assertEqual(self.safari.find_free_side_edge_slot(), (0, 1))
+
+    def test_find_free_side_edge_slot_and_insert_in_it(self):
+        self.assertEqual(self.safari.find_free_side_edge_slot(), (0, 0))
+        self.safari.insert(self.zebra, self.safari.find_free_side_edge_slot())
+        self.assertEqual(self.safari.find_free_side_edge_slot(), (0, 1))
+
 
 class TestRandomMovements(TestCase):
     def setUp(self):
         self.safari = Safari(20, 20)
         self.lion_male = Lion(self.safari, 'male')
         self.lion_female = Lion(self.safari, 'female')
+        self.zebra = Zebra(self.safari, 'female')
         self.safari.insert(self.lion_male, (19, 19))
         self.safari.insert(self.lion_female, (0, 0))
 
@@ -84,3 +139,21 @@ class TestRandomMovements(TestCase):
         self.assertNotEqual(self.safari.find_object(self.lion_male), (19, 19))
         self.assertNotEqual(self.safari.find_object(self.lion_female), (0, 0))
 
+    def test_eat_on_random_movements(self):
+        self.safari_small = Safari(3, 3)
+        zebra = Zebra(self.safari_small, 'female')
+        lion = Lion(self.safari_small, 'female')
+        self.safari_small.insert(zebra, (0, 0))
+        self.safari_small.insert(lion, (2, 2))
+        while self.safari_small.find_object(zebra):
+            self.safari_small.make_random_moves()
+        self.assertIn(zebra, self.safari_small.graveyard)
+        self.assertFalse(self.safari_small.find_object(zebra))
+        self.assertTrue(self.safari_small.find_object(lion))
+
+    # def test_random_movements_epic_style(self):
+    #     i = 0
+    #     [self.safari.insert(Zebra(self.safari, 'female'), (x, 18)) for x in range(20)]
+    #     while i < 1000:
+    #         self.safari.make_random_moves()
+    #         i += 1

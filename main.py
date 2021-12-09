@@ -1,4 +1,5 @@
-from models import Safari, Lion, Zebra
+from models.safari import Safari
+from models.animals import Lion, Zebra
 from time import sleep
 
 

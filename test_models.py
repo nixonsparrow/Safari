@@ -151,9 +151,15 @@ class TestRandomMovements(TestCase):
         self.assertFalse(self.safari_small.find_object(zebra))
         self.assertTrue(self.safari_small.find_object(lion))
 
-    # def test_random_movements_epic_style(self):
-    #     i = 0
-    #     [self.safari.insert(Zebra(self.safari, 'female'), (x, 18)) for x in range(20)]
-    #     while i < 1000:
-    #         self.safari.make_random_moves()
-    #         i += 1
+    def test_random_movements_epic_style(self):
+        i = 0
+        [self.safari.insert(Zebra(self.safari, 'female'), (x, 18)) for x in range(20)]
+        while i < 1000:
+            self.safari.make_random_moves()
+            i += 1
+
+        # for field in self.safari.fields.values():
+        #     if field:
+        #         for obj in field:
+        #             print(obj, obj.age)
+        # print(self.safari.graveyard, len(self.safari.graveyard))

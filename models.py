@@ -10,6 +10,7 @@ class Safari:
         self.width = width
         self.height = height
         self.graveyard = {}
+        self.day = 0
 
         self.fields = {(x, y): [] for x in range(self.width) for y in range(self.height)}
 
@@ -64,10 +65,18 @@ class Safari:
                 the_object.eat(another_object)
             elif not the_object.predator and another_object.predator:
                 another_object.eat(the_object)
-            else:
-                pass
+            elif type(the_object) == type(another_object) and the_object.sex != another_object.sex\
+                    and the_object.age > 100 and another_object.age > 100:
+                the_object.procreate(another_object)
 
         return fields_engaged
+
+    def live_another_day(self):
+        self.day += 1
+
+        for target_list in self.fields.values():
+            for target in target_list:
+                target.age += 1
 
     def make_random_moves(self):
         fields_engaged = {}
@@ -90,6 +99,8 @@ class Safari:
                     pass
             except KeyError:
                 pass
+
+        self.live_another_day()
 
     def visualise(self, println=False, count_species=False):
         picture = ''
@@ -180,6 +191,16 @@ class Animal:
         self.move_on_field(field)
 
         return fields_engaged
+
+    def procreate(self, target):
+        female = [animal for animal in [self, target] if animal.sex == 'female'][0]
+        female_x, female_y = self.safari.find_object(female)
+        new_born = type(target)(self.safari, random.choice(['female', 'male']))
+        for x, y in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
+            try:
+                self.safari.insert(new_born, (female_x + x, female_y + y))
+            except EnvironmentError:
+                pass
 
     def __str__(self):
         return f'{self.name if self.name else self.species} ({self.species})'

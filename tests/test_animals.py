@@ -57,3 +57,15 @@ class TestAnimals(TestCase):
         self.lion_male.move('N', 1)
         self.assertEqual(self.safari.find_object(self.lion_male), (0, 1))
         self.assertNotEqual(self.safari.find_object(self.lion_male), (0, 0))
+        self.assertIn('eaten', self.safari.graveyard[self.zebra])
+
+    def test_rest_in_peace(self):
+        self.assertTrue(self.safari.find_object(self.lion_male))
+        self.assertNotIn(self.lion_male, self.safari.graveyard)
+        self.lion_male.rest_in_peace()
+        self.assertFalse(self.safari.find_object(self.lion_male))
+        self.assertIn(self.lion_male, self.safari.graveyard)
+        self.assertEqual(self.safari.graveyard[self.lion_male], 'natural death')
+
+    def test_birth_control(self):
+        self.assertFalse('What about birth control, compadre?')

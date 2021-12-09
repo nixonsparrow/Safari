@@ -5,7 +5,7 @@ all_possible_directions = ['N', 'S', 'E', 'W', 'NE', 'NW', 'SE', 'SW']
 
 
 class Animal:
-    def __init__(self, safari, species, predator, sex, symbol, name=None):
+    def __init__(self, safari, species, predator, sex, symbol, name=None, birth_rest=50):
         if sex not in ['male', 'female']:
             raise ValueError
 
@@ -18,7 +18,8 @@ class Animal:
 
         self.kingdom = 'animal'
         self.age = 0
-        self.alive = True
+        self.last_birth = 0
+        self.birth_rest = birth_rest
 
     def move_on_field(self, new_field):
         old_field = self.safari.find_object(self)
@@ -65,20 +66,24 @@ class Animal:
                 if v == target:
                     del fields_engaged[k]
 
-        self.safari.put_in_graveyard(target, 'eaten')
+        self.safari.put_in_graveyard(target, f'eaten by {self}')
         self.move_on_field(field)
 
         return fields_engaged
 
-    def procreate(self, target):
-        female = [animal for animal in [self, target] if animal.sex == 'female'][0]
-        female_x, female_y = self.safari.find_object(female)
-        new_born = type(target)(self.safari, random.choice(['female', 'male']))
-        for x, y in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
-            try:
-                self.safari.insert(new_born, (female_x + x, female_y + y))
-            except EnvironmentError:
-                pass
+    def rest_in_peace(self):
+        self.safari.put_in_graveyard(self, 'natural death')
+
+    def procreate(self, father):
+        female = self
+        if female.age - female.last_birth > female.birth_rest:
+            female_x, female_y = self.safari.find_object(female)
+            new_born = type(father)(self.safari, random.choice(['female', 'male']))
+            for x, y in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
+                try:
+                    self.safari.insert(new_born, (female_x + x, female_y + y))
+                except EnvironmentError:
+                    pass
 
     def __str__(self):
         return f'{self.name if self.name else self.species} ({self.species})'

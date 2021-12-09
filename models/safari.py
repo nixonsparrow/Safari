@@ -64,7 +64,9 @@ class Safari:
                 another_object.eat(the_object)
             elif type(the_object) == type(another_object) and the_object.sex != another_object.sex\
                     and the_object.age > 100 and another_object.age > 100:
-                the_object.procreate(another_object)
+                female = the_object if the_object.sex == 'female' else another_object
+
+                female.procreate(the_object if the_object != female else another_object)
 
         return fields_engaged
 
@@ -74,6 +76,8 @@ class Safari:
         for target_list in self.fields.values():
             for target in target_list:
                 target.age += 1
+
+    # ---------------------------------- RANDOM MOVEMENT SEQUENCES
 
     def make_random_moves(self):
         fields_engaged = {}
@@ -98,6 +102,8 @@ class Safari:
                 pass
 
         self.live_another_day()
+
+    # ---------------------------------- VISUALISATION
 
     def visualise(self, println=False, count_species=False):
         picture = ''
